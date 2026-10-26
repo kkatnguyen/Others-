@@ -1,7 +1,7 @@
 # Visualizing Epoch AI's Frontier AI Data Centers dataset
 
 A step-by-step guide to building an interactive dashboard from
-<https://epoch.ai/data/ai-data-centers> in **Power BI** (Part A) or **Tableau** (Part B).
+<https://epoch.ai/data/ai-data-centers> in **Power BI** (Part A) or **Tableau Public** (Part B, written for beginners).
 
 > **Field names:** Epoch updates this dataset regularly, and its column names
 > can change. The names below (`Name`, `Owner`, `Power (MW)`, …) are
@@ -154,75 +154,198 @@ If your timeline lists *added* MW per milestone instead of a running total, use 
 
 ---
 
-## Part B: Tableau (Public is free; Desktop also works)
+## Part B: Tableau Public (free, Mac or Windows), for beginners
 
-### B1. Connect and clean
-1. **Connect → To a File → Text file** → choose the data centers CSV.
-2. On the Data Source page, click the type icon above each numeric column → **Number (decimal)**.
-   Set `Latitude` and `Longitude` to **Geographic Role → Latitude/Longitude**, and `Country` to
-   **Geographic Role → Country/Region**.
-3. Timeline file: drag it onto the canvas next to the first table, and create a
-   **relationship** on `Name` = `Name`.
+This part assumes you've never opened Tableau. Plan on about 2 hours for your
+first time through.
 
-### B2. Calculated fields
-**Analysis → Create Calculated Field**:
+### B0. Install and learn the screen (15 min)
 
-```
-// Power (GW)
-SUM([Power (MW)]) / 1000
+1. Go to <https://public.tableau.com>, create a free account, and download
+   **Tableau Public** (the desktop app). Install it and sign in.
+2. Know before you start: Tableau Public **saves only to your online profile**,
+   not to your computer, and anyone can see what you save. That's fine for
+   Epoch's public data.
 
-// H100e (M)
-SUM([H100e]) / 1000000
+**The four words you need**
 
-// Sites
-COUNTD([Name])
+| Term | What it is |
+|------|------------|
+| **Data pane** | The list of your columns on the left side of a sheet. |
+| **Columns / Rows shelves** | The two bars across the top. Drop a field on *Columns* to spread it left to right, or on *Rows* to stack it top to bottom. |
+| **Marks card** | The box with *Color*, *Size*, *Label*, *Detail*, *Tooltip*. Drop a field on one of these to change how the marks look. |
+| **Pill** | The colored capsule a field becomes when you drop it on a shelf. You can right-click a pill for options. |
 
-// Capex ($B)
-SUM([Capital cost (USD)]) / 1e9
+**Blue vs. green pills:** Blue (*discrete*) means separate categories, like owner
+names. Green (*continuous*) means a smooth range, like megawatts or a timeline.
+If a chart looks wrong, check the pill color first.
 
-// Share of Power  (table calc)
-SUM([Power (MW)]) / TOTAL(SUM([Power (MW)]))
-```
+**Dimensions vs. measures:** Text and category columns (Owner, Country) are
+*dimensions*. Numbers (Power) are *measures*, which Tableau adds up
+automatically (`SUM(...)`).
 
-Cumulative capacity, if your timeline holds **added MW per milestone**: put
-`SUM([Power (MW)])` on Rows, then right-click → **Quick Table Calculation → Running Total**
-(compute using `Date`).
-If it holds a **running total per site**, use this calculated field instead:
+**Undo is your friend.** Ctrl+Z (Cmd+Z on Mac) undoes almost anything.
 
-```
-// Latest MW per site (LOD)
-{ FIXED [Name], [Date] : MAX([Power (MW)]) }
-```
+### B1. Load the data (10 min)
 
-Then sum it across sites with Running Total turned **off**, and fill in any missing
-dates with *Show Missing Values* plus a `LOOKUP`/`PREVIOUS_VALUE` calculation,
-or reshape the data beforehand.
+1. On the start screen, under **Connect → To a File**, click **Text file**. Pick
+   the data centers CSV.
+2. You're now on the **Data Source** page. It shows your columns and a preview
+   of the rows.
+3. **Check each column's type.** The small icon above each column name shows it:
+   `Abc` = text, `#` = number, a calendar = date, a globe = location.
+   - If a number column shows `Abc`, click the icon → **Number (decimal)**.
+     If its values then turn into `null`, the cells contain text like `~500`.
+     Fix those in Excel first, then reload the file.
+   - Click the icon on `Latitude` → **Geographic Role → Latitude**. Do the same
+     for `Longitude` (choose Longitude) and `Country` (choose
+     Country/Region).
+4. **Optional: the timeline file.** Drag it from the left side onto the canvas
+   next to the first table. A line (a *relationship*) appears, and Tableau asks
+   which fields match. Choose `Name` on both sides. This lets filters work
+   across both files.
+5. Click **Sheet 1** at the bottom-left to start building.
 
-### B3. Build one sheet per visual
-1. **KPI sheet** (one sheet per KPI): drag the calculated field to **Text** on the Marks card,
-   enlarge the font, and add a label such as "Total power (GW)".
-2. **Map sheet**: double-click `Longitude`, then `Latitude`. Then drag:
-   `Power (MW)` → **Size**, `Owner` → **Color**, `Name` and `H100e` → **Tooltip**.
-   Set mark type to **Circle** and opacity to about 70%. Use the Map → Background Maps → *Light* style.
-3. **Bar sheet**: `Owner` → Rows, `Power (GW)` → Columns. Sort descending with the toolbar
-   button. Add labels with Marks → Label.
-4. **Growth sheet**: `Date` (continuous, **Month**) → Columns, cumulative capacity → Rows,
-   mark type **Area**. Add a reference line at TODAY() if you want.
-5. **Table sheet**: `Name`, `Owner`, `Country`, `Status` → Rows; `Measure Values` → Text,
-   filtered to Power, H100e, and Capex.
+### B2. Make the headline numbers (15 min)
 
-### B4. Assemble the dashboard
-1. **New Dashboard**, Size → *Automatic* (or 1366 × 768).
-2. Drag in sheets in this order: title, KPI row (a Horizontal container), map + bar,
-   then growth chart + table.
-3. Filters: on the map, open the sheet menu → **Filters → Owner / Country / Status** →
-   **Apply to Worksheets → All Using This Data Source**.
-4. Interactivity: **Dashboard → Actions → Add Action → Filter**. Source = Map and Bar,
-   Target = all sheets, Run on = *Select*. Clicking an owner or site then filters
-   everything else.
-5. Use one owner color palette everywhere: right-click `Owner` → Default Properties → Color.
-6. Add a footer text object with the Epoch AI citation.
-7. **File → Save to Tableau Public** (Public) or **Server → Publish**.
+These are simple formulas called **calculated fields**.
+
+1. Top menu: **Analysis → Create Calculated Field**.
+2. Name it `Power (GW)`, type the formula below, and click **OK**:
+   ```
+   SUM([Power (MW)]) / 1000
+   ```
+   Tip: when you start typing `[`, Tableau suggests column names. Pick yours
+   from the list so the spelling matches exactly.
+3. Repeat for the other three:
+   ```
+   H100e (M)    →  SUM([H100e]) / 1000000
+   Sites        →  COUNTD([Name])
+   Capex ($B)   →  SUM([Capital cost (USD)]) / 1000000000
+   ```
+   (`COUNTD` means "count distinct": each site is counted once.)
+4. **Build a number card:**
+   - Rename the sheet: double-click the **Sheet 1** tab and type `KPI Power`.
+   - Drag `Power (GW)` from the Data pane onto **Text** on the Marks card.
+     A single number appears.
+   - Click **Text** on the Marks card → the **…** button. In the editor, type
+     `Total power (GW)` on a new line above the number, then make the number
+     large (for example, 28 pt bold). Click **OK**.
+   - To round it: right-click the pill → **Format** → Numbers → **Number (Custom)**
+     → 1 decimal place.
+5. **Make the other three cards:** right-click the `KPI Power` tab →
+   **Duplicate**. On the copy, drag the old pill off the Marks card and drop in
+   `H100e (M)`. Edit the label text. Repeat for `Sites` and `Capex ($B)`.
+
+### B3. The map (15 min)
+
+1. Click the **New Worksheet** icon (bottom bar, the small "+" sheet). Name the
+   sheet `Map`.
+2. In the Data pane, find **your** `Longitude` and double-click it. Then
+   double-click **your** `Latitude`. A map appears.
+   ⚠ Tableau also adds fields called `Latitude (generated)` and
+   `Longitude (generated)` in italics. Don't use those. They place points by
+   country name, not by your coordinates.
+3. **Beginner trap: you'll see only one dot.** That's because Tableau averaged
+   all the coordinates. Fix it by dragging `Name` onto **Detail** on the Marks
+   card. Now there's one dot per data center.
+4. Drag `Power (MW)` onto **Size**. Bigger dots now mean more power. Click
+   **Size** and drag the slider to the right if the dots look too small.
+5. Drag `Owner` onto **Color**. Then click **Color** and set opacity to about 70%
+   so overlapping dots stay visible.
+6. Drag `H100e` and `Status` onto **Tooltip**. Hover over a dot to check that the
+   pop-up shows them.
+7. For a cleaner background: top menu **Map → Background Maps → Light**.
+
+*No coordinates in your file?* Double-click `Country` instead. Then use the
+**Show Me** panel (top-right) → filled map.
+
+### B4. Power by owner, as a bar chart (10 min)
+
+1. New worksheet, named `By Owner`.
+2. Drag `Owner` onto **Rows**. Drag `Power (GW)` onto **Columns**. Bars appear.
+3. Click the **sort descending** button in the toolbar (bars with a down arrow) to
+   put the biggest owner at the top.
+4. Drag `Power (GW)` onto **Label** to show the number at the end of each bar.
+5. To keep the colors consistent with the map: drag `Owner` onto **Color** too.
+   For a calmer look, skip this and leave every bar the same color.
+
+### B5. Growth over time (20 min)
+
+This sheet needs the timeline file (or any date column).
+
+1. New worksheet, named `Growth`.
+2. Drag `Date` onto **Columns**. By default it shows as a blue pill reading
+   `YEAR(Date)`. Right-click the pill and choose the **second** "Month" in the
+   menu (the one that shows example dates like *May 2025*). The pill turns
+   green, which means a continuous timeline.
+3. Drag `Power (MW)` from the timeline file onto **Rows**.
+4. Next, check what your timeline numbers mean. Open the file and look at one site:
+
+   - **Each row is new MW added at that milestone** (the numbers don't
+     repeat): right-click the `SUM(Power (MW))` pill → **Quick Table Calculation →
+     Running Total**. The line now climbs as capacity adds up. Done.
+   - **Each row is the site's total so far** (the number keeps growing for the
+     same site): *don't* use Running Total, or you'll count the same megawatts
+     many times. This case needs the data reshaped first, which is hard to do in
+     Tableau. Send me the file and I'll convert it to the "MW added" format.
+5. In the Marks card dropdown (it says *Automatic*), choose **Area**.
+6. Optional "today" line: right-click the date axis → **Add Reference Line** →
+   Value: *Constant*, pick today's date. Built capacity is to the left of the
+   line and planned capacity to the right.
+
+### B6. Detail table (10 min)
+
+1. New worksheet, named `Table`.
+2. Drag `Name`, `Owner`, `Country`, and `Status` onto **Rows**, one after another.
+3. Double-click `Power (MW)`, `H100e`, and `Capital cost (USD)` in the Data pane.
+   Tableau adds them as columns of numbers.
+4. To sort by power: hover over the `Power (MW)` column header and click the
+   small sort icon that appears.
+
+### B7. Put it on a dashboard (25 min)
+
+1. Click the **New Dashboard** icon on the bottom bar (the grid icon next to
+   New Worksheet).
+2. Left panel → **Size** → choose **Automatic** so it fits any screen.
+3. **Title:** drag **Text** (under *Objects*, bottom-left) to the top. Type
+   "Frontier AI Data Centers".
+4. **Card row:** drag a **Horizontal** object under the title. Then drag the four
+   KPI sheets into it, one beside the next. Tableau sizes them evenly.
+5. **Middle row:** drag `Map` below the cards. Drag `By Owner` to the right edge
+   of the map. A grey shaded area shows where it will land before you let go.
+6. **Bottom row:** drag `Growth` under the map, and `Table` to the right of it.
+7. **Filters:**
+   - Click the map on the dashboard. Small icons appear on its border. Click
+     the **▾ (More options)** arrow → **Filters** → tick `Owner`, `Country`,
+     `Status`. Filter boxes appear on the right.
+   - On each filter box: ▾ → **Apply to Worksheets → All Using This Data
+     Source**, so one filter controls every chart.
+   - ▾ → **Single Value (dropdown)** or **Multiple Values (dropdown)** saves space.
+8. **Click-to-filter:** click the map, then click its **funnel icon** ("Use as
+   Filter"). Do the same on `By Owner`. Now clicking a company's bar highlights
+   only its sites everywhere. Press **Esc** or click an empty space to reset.
+9. **Credit Epoch:** drag another **Text** object to the bottom. Type
+   *"Source: Epoch AI, Frontier Data Centers (accessed <date>). CC BY."*
+
+### B8. Save and share (5 min)
+
+1. **File → Save to Tableau Public As…**, give it a name, and click **Save**.
+   Your browser opens the published dashboard.
+2. Copy the browser link to share it. On the web page, the **Share** button
+   also gives you embed code.
+3. To keep working later: in the app, **File → Open from Tableau Public**.
+
+### If you get stuck
+
+| What you see | What to do |
+|--------------|------------|
+| A field I need isn't in the Data pane | Check its name on the Data Source tab (bottom-left). It may be spelled differently. |
+| Calculated field says "The calculation contains errors" | Click the red message: usually a column name typo or a missing `]`. |
+| Chart shows one big bar or one dot | Something got added up that shouldn't be. Drag `Name` onto **Detail**. |
+| Line chart shows only a few points | The date pill is blue. Right-click → the second "Month" option. |
+| A sheet looks crushed on the dashboard | Click it → ▾ → **Fit → Entire View**. |
+| Everything went wrong | Ctrl+Z, or right-click the sheet tab → **Clear Sheet** and start that sheet again. |
 
 ---
 
