@@ -1,7 +1,7 @@
 # Visualizing Epoch AI's Frontier AI Data Centers dataset
 
 A step-by-step guide to building an interactive dashboard from
-<https://epoch.ai/data/ai-data-centers> in **Power BI** (Part A) or **Tableau Public** (Part B, written for beginners).
+<https://epoch.ai/data/ai-data-centers> in **Power BI** (Part A) or **Tableau Public** (Part B). Both parts are written for beginners.
 
 > **The data is ready.** The `data/` folder has two cleaned files built from
 > the Epoch download, and every field name in this guide matches them exactly.
@@ -134,82 +134,331 @@ them into two clean files:
 
 ---
 
-## Part A: Power BI Desktop (free, Windows)
+## Part A: Power BI Desktop (free, Windows), for beginners
 
-### A1. Load
-1. **Home → Get data → Text/CSV** → `data_centers_clean.csv` → **Transform Data**.
-2. In Power Query:
-   - Make sure the number columns are **Decimal Number**. Power BI usually
-     detects them on its own.
-   - Set `ZIP` to **Text** so leading zeros are kept.
-   - Rename the query to `DataCenters`.
-3. Load `capacity_by_month.csv` the same way. Name it `Monthly`, and check that
-   `Month` is typed **Date**.
-4. **Close & Apply**. Then, in the Data pane, select `Latitude` and set
-   **Column tools → Data category → Latitude**. Do the same for `Longitude`
-   (Longitude) and `Country` (Country/Region).
+This part assumes you've never opened Power BI. Plan on about 2 hours for your
+first time through. Every step says what you should see, so you can tell
+right away if something went wrong.
 
-### A2. Relationship
-**Model view** → drag `DataCenters[Name]` onto `Monthly[Data center]`
-(one-to-many, single direction). Now an Owner or Country filter also filters the
-growth chart.
+### A0. Install and learn the screen (15 min)
 
-### A3. Measures
-**Home → New measure**, one at a time:
+1. **Install:** get **Power BI Desktop** free from the Microsoft Store (search
+   "Power BI Desktop") or from <https://powerbi.microsoft.com/desktop>.
+   - **Windows only.** There is no Mac version. On a Mac, use a school or work
+     Windows computer, a Windows virtual machine (Parallels), or switch to the
+     Tableau steps in Part B.
+2. Open it. If it asks you to sign in, you can close that box. You don't need
+   an account to build and save a report.
+
+**The screen**
+
+| Part | Where | What it's for |
+|------|-------|---------------|
+| **Three view icons** | Thin bar on the far left | **Report** (bar chart icon) is where you build. **Table** (grid icon) shows your data's rows. **Model** (three linked boxes) shows how your tables connect. |
+| **Canvas** | Middle | Your report page. Visuals go here. |
+| **Visualizations pane** | Right | Icons for each chart type. Under them are the **field wells** (boxes like *X-axis*, *Y-axis*, *Legend*) where you drop fields. |
+| **Paintbrush icon** | Top of the Visualizations pane | **Format visual**: colors, fonts, titles, labels. |
+| **Data pane** | Far right | Your tables and their columns. Click ▸ to open a table. |
+| **Filters pane** | Between the canvas and the Visualizations pane | Filters. You can collapse it with its `<` arrow. |
+
+**Two kinds of fields in the Data pane:**
+- **Columns** come straight from your CSV. A **Σ** next to one means Power BI
+  will add it up automatically.
+- **Measures** (calculator icon) are formulas you write yourself, in step A4.
+
+**To build any visual:** click an empty spot on the canvas, click a chart icon
+in the Visualizations pane, and drag fields from the Data pane into its wells.
+If a field lands in the wrong well, drag it back out. **Ctrl+Z** undoes
+almost anything.
+
+**Save often:** **File → Save as** → name it `AI Data Centers.pbix`.
+
+### A1. Load the first file (10 min)
+
+1. On the **Home** ribbon, click **Get data** → **Text/CSV**. (If you only see
+   a big "Get data" button, click its lower half for the list.)
+2. Choose `data/data_centers_clean.csv` → **Open**.
+3. A preview window shows the first rows. Check that the columns are split
+   correctly: `Name`, `Owner`, `Owner confidence`, … Then click
+   **Transform Data**, *not* Load. This opens the **Power Query Editor**, where
+   you fix column types before loading.
+4. Look at the small icon on the left of each column header:
+   `ABC` = text, `1.2` = decimal number, `123` = whole number, a calendar = date.
+   - Click the icon on `ZIP` → **Text**. If asked, choose **Replace current**.
+     ZIP codes are labels, not amounts to add up.
+   - Check that these are `1.2` (decimal): `Latitude`, `Longitude`,
+     `IT power (MW)`, `Facility power (MW)`, `H100 equivalents`,
+     `Capital cost (2025 USD billions)`, `Planned facility power (MW)`.
+     If one isn't, click its icon → **Decimal Number**.
+   - `Planned completion` should be a calendar icon (**Date**).
+5. On the right, under **Query Settings → Name**, change
+   `data_centers_clean` to `DataCenters` and press Enter. The DAX formulas
+   below use this name.
+6. Don't click Close yet. Go on to A2.
+
+### A2. Load the monthly file (5 min)
+
+1. Still in Power Query: **Home → New Source → Text/CSV** →
+   `data/capacity_by_month.csv` → **OK**.
+2. Check the types: `Month` = **Date** (calendar icon), and the four number
+   columns are decimal.
+3. Rename the query `Monthly`.
+4. Click **Close & Apply** (top-left). Power BI loads both files. In the Data
+   pane, you should now see two tables: **DataCenters** and **Monthly**.
+5. To check, click the **Table view** icon on the far left and select
+   `DataCenters` in the Data pane. The bottom-left should say *95 rows*. Then
+   select `Monthly`, which should show *7,273 rows*.
+
+### A3. Set column details (10 min)
+
+These settings tell Power BI how to treat some columns. Stay in **Table view**.
+
+1. **Map columns:** in the Data pane, click `Latitude` (under DataCenters). A
+   **Column tools** ribbon appears at the top. Set:
+   - **Data category → Latitude**
+   - **Summarization → Don't summarize** (otherwise Power BI adds the
+     latitudes together, and the map breaks)
+
+   Do the same for `Longitude` (Data category → **Longitude**).
+2. Click `Country` → **Data category → Country/Region**.
+3. Click `ZIP` → **Data category → Postal code**.
+4. **Connect the two tables:** click the **Model view** icon (far left). You'll
+   see two boxes, one per table.
+   - Drag `Name` from the **DataCenters** box onto `Data center` in the
+     **Monthly** box.
+   - A **New relationship** window opens. Check that it says
+     **Cardinality: One to many (1:\*)** and **Cross-filter direction: Single**.
+     Click **OK** (or **Save**).
+   - A line now joins the boxes, with **1** on the DataCenters side and **\***
+     on the Monthly side. Now, filtering by Owner or Country also filters the
+     growth chart.
+
+### A4. Write the measures (20 min)
+
+A **measure** is a saved formula, like a spreadsheet formula, written in a
+language called DAX. You'll write six of them.
+
+1. Go back to **Report view** (top icon on the left).
+2. In the Data pane, **right-click the `DataCenters` table → New measure**.
+   A formula bar opens above the canvas with `Measure = `.
+3. Select all the text in the formula bar, paste the first formula below, and
+   press **Enter**. A new field with a calculator icon appears under
+   DataCenters.
+4. Repeat for each formula. Paste them one at a time, not all at once:
 
 ```DAX
 Total Power (GW) = DIVIDE ( SUM ( DataCenters[Facility power (MW)] ), 1000 )
-
+```
+```DAX
 Total H100e (M) = DIVIDE ( SUM ( DataCenters[H100 equivalents] ), 1000000 )
-
+```
+```DAX
 Sites = DISTINCTCOUNT ( DataCenters[Name] )
-
+```
+```DAX
 Total Capex ($B) = SUM ( DataCenters[Capital cost (2025 USD billions)] )
-
+```
+```DAX
 Share of Power =
 DIVIDE (
     SUM ( DataCenters[Facility power (MW)] ),
     CALCULATE ( SUM ( DataCenters[Facility power (MW)] ), ALLSELECTED ( DataCenters ) )
 )
+```
 
+5. For the last one, **right-click the `Monthly` table → New measure** so it's
+   stored with the monthly data:
+
+```DAX
 Capacity (GW) = DIVIDE ( SUM ( Monthly[Facility power (MW)] ), 1000 )
 ```
 
-`Capacity (GW)` is a plain sum, because each row of the monthly file already
-holds the site's total for that month.
+**What the formulas mean:** `SUM(...)` adds up a column. `DIVIDE(a, b)` is
+a ÷ b, and it returns blank instead of an error if b is 0. `DISTINCTCOUNT`
+counts each site once. `Share of Power` divides one owner's power by the total
+for whatever is currently filtered. `Capacity (GW)` is a plain sum, because
+each monthly row already holds the site's total for that month.
 
-### A4. Build the visuals
-1. **KPI cards**: add 4 **Card** visuals, one each for `Total Power (GW)`,
-   `Total H100e (M)`, `Sites`, and `Total Capex ($B)`. In Format, set display
-   units to *None* and decimals to 1.
-2. **Map**: add a **Map** (or **Azure Map**) visual.
-   - Latitude → `Latitude`, Longitude → `Longitude`, Bubble size →
-     `Facility power (MW)`, Legend → `Owner`. Tooltips → `Name`,
-     `H100 equivalents`, `Status`, `Location precision`.
-3. **Bar chart**: add a **Clustered bar chart**.
-   - Y-axis → `Owner`, X-axis → `Total Power (GW)`. Sort by the measure, descending.
-   - Turn on data labels. For a cleaner chart, give all bars one color instead of
-     one per owner.
-4. **Growth chart**: add a **Stacked area chart**.
-   - X-axis → `Monthly[Month]` (switch from the date hierarchy to plain *Month*),
-     Y-axis → `Capacity (GW)`, Legend → `Monthly[Period]`. The planned months
-     then show in a different color.
-5. **Table**: add a **Table** with `Name`, `Owner`, `Country`, `Status`,
-   `Facility power (MW)`, `H100 equivalents`, and
-   `Capital cost (2025 USD billions)`. Add a data-bar conditional format on the
-   power column.
-6. **Slicers**: add three **Slicer** visuals for `Owner`, `Country`, and `Status`.
-   Use the *Dropdown* style to save space.
+6. **Round the numbers:** click a measure in the Data pane. On the
+   **Measure tools** ribbon, set the decimal places to **1**. For
+   `Share of Power`, click the **%** button instead. `Sites` needs 0 decimals.
 
-### A5. Layout and polish
-- Canvas: **View → Page view → Fit to page**, 16:9.
-- Top row: title text box ("Frontier AI Data Centers"), then the 4 KPI cards.
-- Middle row: the map (about 60% of the width) next to the bar chart (about 40%).
-- Bottom row: the growth chart next to the table. Put the slicers in a slim column
-  on the left.
-- Give every owner the same color in every visual: **Format → Data colors**.
-- Add a footer text box with the Epoch credit from Step 1.
-- **File → Publish → Publish to Power BI** to share it, or export it as PDF.
+**If a formula turns red or shows an error:** there's usually a typo in a
+column name. Delete the column name, start typing `DataCenters[`, and pick the
+column from the list that appears.
+
+### A5. Headline number cards (15 min)
+
+1. Click an empty spot on the canvas → in Visualizations, click **Card** (the
+   icon showing "123"). If you see both **Card** and **Card (new)**, either
+   works. These steps use Card.
+2. Drag `Total Power (GW)` into the **Fields** well. The card shows
+   **18.2**, with "Total Power (GW)" under it.
+3. Make it look good: with the card selected, click the paintbrush
+   (**Format visual**):
+   - **Callout value** → font size 28, bold.
+   - **Category label** → leave it on. It shows the measure's name.
+4. **Make the other three:** select the card, press **Ctrl+C** and then
+   **Ctrl+V**, drag the copy to the side, and swap the field in its Fields well
+   for `Total H100e (M)`. Repeat for `Sites` and `Total Capex ($B)`.
+5. **Check:** the cards read **18.2**, **14.8**, **95**, and **539.2**. If one
+   is way off, open that measure (click it in the Data pane) and compare its
+   formula with A4.
+6. To make the labels friendlier, rename the measure in the well: double-click
+   the field name in the visual's **Fields** well and type e.g.
+   *"Facility power (GW)"*. This changes the label only on that card.
+
+### A6. The map (20 min)
+
+1. Click an empty spot → click **Azure Map** (a globe with a pin) in
+   Visualizations. If there's no Azure Map, use **Map** (a plain globe).
+2. Drag these fields from **DataCenters** into the wells:
+   | Well | Field |
+   |------|-------|
+   | Latitude | `Latitude` |
+   | Longitude | `Longitude` |
+   | Size (or Bubble size) | `Facility power (MW)` |
+   | Legend | `Owner` |
+   | Tooltips | `Name`, `H100 equivalents`, `Status`, `Location precision` |
+3. You should see bubbles across the US, plus a few in Europe and Asia.
+   Bigger bubbles mean more power.
+4. **If the map is blank with a message about map visuals being disabled:** go
+   to **File → Options and settings → Options → Security** (under *Global*).
+   Tick the box that allows map visuals, click **OK**, and then close and
+   reopen Power BI.
+5. **If all bubbles land in one spot or in the ocean:** `Latitude`/`Longitude`
+   are being added up. Redo A3 step 1 (**Don't summarize**). Also check that
+   their well entries don't read "Sum of Latitude". If they do, click the ▾ next
+   to the field in the well → **Don't summarize**.
+6. **Tooltip names:** in the Tooltips well, `Name` may show as
+   "First Name". Click its ▾ → **First** is fine. Sites sharing a ZIP code
+   (e.g. QTS Richmond 1–3 in Sandston, VA) share one bubble, and the tooltip
+   shows only one name. That's the trade-off of ZIP-level positions.
+7. Format → **Bubbles** (or **Bubble layer**): set transparency to about 30% so
+   overlaps are visible. Zoom the map to the US with the mouse wheel. The
+   dashboard keeps the view you leave it on.
+
+### A7. Power by owner, as a bar chart (10 min)
+
+1. Empty spot → **Clustered bar chart** (horizontal bars).
+2. **Y-axis** → `Owner`. **X-axis** → `Total Power (GW)`.
+3. Sort it: click the **…** (More options) at the top-right of the visual →
+   **Sort axis** → **Total Power (GW)**, then **…** → **Sort axis → Sort
+   descending**. Google should be on top at about 3.9.
+4. Format → **Data labels → On** to show the number at the end of each bar.
+5. `Unknown` (about 2.3 GW) is a real bar. It covers sites whose owner Epoch
+   doesn't know. Keep it so the bars add up to the total.
+
+### A8. Growth over time (15 min)
+
+1. Empty spot → **Stacked area chart**.
+2. **X-axis** → `Month` from the **Monthly** table.
+   - Power BI turns dates into a *Date Hierarchy* (Year → Quarter → Month → Day)
+     and shows only years. Click the **▾** next to `Month` in the X-axis well
+     and choose **Month** (the field itself, not "Date Hierarchy"). You
+     now get one point per month.
+3. **Y-axis** → `Capacity (GW)` (the measure in Monthly).
+4. **Legend** → `Period` (from Monthly). "To date" and "Planned" now show in
+   different colors.
+5. **Check:** hover over October 2026. It should read about **18.2**, the same
+   as the power card. The far right (January 2030) shows about **49.9**.
+6. Format → **Title → Text**: *"Total facility power, GW (planned after Oct 2026)"*.
+7. **If the line is flat or jagged with 1,000+ values:** you used the
+   `Facility power (MW)` *column* instead of the `Capacity (GW)` measure. Swap it.
+
+### A9. Detail table (10 min)
+
+1. Empty spot → **Table** visual (grid icon).
+2. Drag these fields into **Columns**, in this order: `Name`, `Owner`,
+   `Country`, `Status`, `Facility power (MW)`, `H100 equivalents`,
+   `Capital cost (2025 USD billions)`.
+3. Sort it by clicking the `Facility power (MW)` column header in the visual.
+   Click it again to reverse the order.
+4. **Data bars:** in the Columns well, click ▾ next to `Facility power (MW)` →
+   **Conditional formatting → Data bars** → **OK**. Each row gets a small bar.
+5. Shorter headers: double-click a field in the Columns well to rename it for
+   this visual, e.g. *"Power (MW)"*, *"Capex ($B)"*.
+
+### A10. Filters (slicers) (10 min)
+
+1. Empty spot → **Slicer** (a funnel on a box). Drag `Owner` into **Field**.
+2. Format → **Slicer settings → Options → Style → Dropdown**. This keeps it
+   small.
+3. Copy and paste it twice, and swap the field to `Country` and `Status`.
+4. **Test:** choose *Meta* in the Owner slicer. Every visual should update,
+   including the growth chart. That works because of the relationship from
+   A3. Clear the slicer with its eraser icon.
+
+**Click-to-filter is already on.** Clicking a bar or a bubble filters or
+highlights the other visuals. To change how one visual reacts, select the
+source visual, then **Format ribbon → Edit interactions**. Small icons appear
+on each other visual: a funnel (filter), a pie (highlight), or ⊘ (none).
+
+### A11. Layout and polish (20 min)
+
+1. **Page size:** click an empty spot on the canvas → Format → **Canvas
+   settings → Type → 16:9**. Then **View → Page view → Fit to page**.
+2. **Title:** **Insert → Text box** → type *"Frontier AI Data Centers"* → size
+   24, bold. Put it top-left.
+3. Arrange it like this (drag the visuals, and resize them from their corners):
+   ```
+   ┌─────────────────────────────────────────────────────────┐
+   │ Title                                                   │
+   │ [Power] [H100e] [Sites] [Capex]       [Owner][Country]  │
+   ├───────────────────────────────┬─────────────────────────┤
+   │ Map (≈60%)                    │ Power by owner (≈40%)   │
+   ├───────────────────────────────┼─────────────────────────┤
+   │ Growth over time              │ Detail table            │
+   ├───────────────────────────────┴─────────────────────────┤
+   │ Source line                                             │
+   └─────────────────────────────────────────────────────────┘
+   ```
+4. **Line things up:** select several visuals with Ctrl+click → **Format ribbon
+   → Align** → *Align top* / *Distribute horizontally*.
+5. **One color per owner everywhere:** on the bar chart, Format → **Bars →
+   Colors**. Turn on *Show all*, then set each owner's color to match the map.
+   Power BI usually keeps them consistent on its own, but check.
+6. **Theme (optional):** **View → Themes** to change all the colors at once.
+7. **Credit Epoch:** **Insert → Text box** at the bottom. Paste the credit line
+   from Step 1, and add *"Map positions are approximate (ZIP code or city center)."*
+8. **Save** (Ctrl+S).
+
+### A12. Share it (10 min)
+
+- **Easiest: PDF.** Use **File → Export → Export to PDF**. Good for a class
+  submission or a slide.
+- **Share the file:** put `AI Data Centers.pbix` in a shared folder. Anyone with
+  Power BI Desktop can open it and click around. The data is stored inside the
+  file.
+- **Publish online:** **Home → Publish** uploads it to the Power BI website.
+  This needs a **work or school Microsoft account**. Personal emails (Gmail,
+  Outlook.com) can't sign up. If your school gives you one, sign in with it
+  when Publish asks, then share the link from the website.
+
+### Team plan, if you use Power BI
+
+The same roles as the Tableau team plan work here. Each person builds their
+visuals in their own `.pbix` file, and Kalven combines them:
+1. Everyone does **A1–A4 exactly as written**, with the same table names
+   (`DataCenters`, `Monthly`) and the same measure names. Kathy shares the
+   formulas as text so everyone pastes the identical ones.
+2. Each builder selects their finished visual, presses **Ctrl+C**, opens
+   Kalven's main file, and presses **Ctrl+V**. A pasted visual keeps working when
+   the field and measure names match. Test this with one visual early.
+3. If a pasted visual shows errors, Kalven rebuilds it from its step (A5–A10).
+
+### If you get stuck
+
+| What you see | What to do |
+|--------------|------------|
+| A field is missing from the Data pane | Click ▸ next to the table name to open it. Check that you renamed the tables in A1/A2. |
+| Measure shows an error / red squiggle | A column name typo. Retype it and pick from the suggestion list. |
+| Card shows 18,246 instead of 18.2 | You dropped the *column* `Facility power (MW)`, not the *measure* `Total Power (GW)`. |
+| Card shows 1,735 | You used `Monthly[Facility power (MW)]`, which adds up every month. Use the DataCenters version. |
+| Growth chart shows only a few points | The X-axis is on *Date Hierarchy*. Click ▾ → **Month**. |
+| Owner slicer doesn't change the growth chart | The relationship is missing. Redo A3 step 4. |
+| Map shows bubbles in the ocean | Latitude/Longitude are being summed. Use **Don't summarize** (A3, A6 step 5). |
+| A visual vanished or looks tiny | Ctrl+Z, or check **View → Selection** to find it. |
 
 ---
 
