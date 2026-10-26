@@ -22,6 +22,51 @@ A step-by-step guide to building an interactive dashboard from
 
 ---
 
+## Team plan (Tableau, 5 people)
+
+Everyone builds their own pieces in their own Tableau Public workbook, and
+Kalven combines them at the end. Tableau Public doesn't support several people
+editing one workbook at the same time, so this avoids conflicts.
+
+| Who | Role | Owns | Guide steps | Also |
+|-----|------|------|-------------|------|
+| **Kathy** | Data lead | Download, column matching, cleaning, the 4 calculated fields | Steps 1–2, B1, B2 (formulas only) | Checks every number against the CSV before publishing |
+| **Anthony** | Cards and table | 4 headline number cards and the detail table | B2, B6 | Writes the label and tooltip wording |
+| **Mark** | Map | The map | B3 | Picks the owner color list everyone uses |
+| **Benjamin** | Charts | Bar chart and growth chart | B4, B5 | Has the hardest piece (the growth chart). Ask Kathy early if the timeline data looks odd |
+| **Kalven** | Dashboard lead | Layout, filters, title, citation, publishing | B7, B8 | Early on, sketches the layout and drafts the "Insights" text |
+
+### Order of work
+
+1. **Kathy goes first (about 30 min).** Meanwhile, everyone else installs
+   Tableau Public and reads B0. When Kathy is done, Kathy posts three things in
+   the shared folder:
+   - the cleaned CSV,
+   - the four formulas as text (copy-paste them exactly),
+   - the final column names (the filled-in Step 2 table).
+2. **Anthony, Mark, and Benjamin build in parallel (about 1 hour).** Each starts
+   from Kathy's CSV and names sheets exactly as in the guide (`KPI Power`,
+   `Map`, `By Owner`, `Growth`, `Table`, …). During this time, Kalven sketches
+   the layout and drafts the insights text, and Kathy helps whoever is stuck.
+3. **Merge (about 45 min).** Each builder right-clicks their sheet tab →
+   **Copy** and sends it to Kalven, who pastes it into the main workbook. Pasting
+   only works when everyone used the same CSV and the same calculated-field names.
+   Test it with one sheet early. If pasting doesn't work, Kalven rebuilds that
+   sheet by following its guide step (10–20 min per sheet).
+4. **Check and publish.** Kathy compares every headline number with the CSV,
+   and then Kalven publishes (B8) and shares the link.
+
+### Agree on these before starting
+- **One data file:** use Kathy's cleaned CSV only, never your own download.
+- **Exact names:** field and calculated-field names match exactly, including
+  capitals and brackets.
+- **One color list:** owner colors follow Mark's list.
+- **One shared folder and one group chat:** use them for files and questions.
+
+Swap roles freely. The plan only depends on someone owning each row.
+
+---
+
 ## Step 1: Download the data
 
 1. Open <https://epoch.ai/data/ai-data-centers>.
